@@ -75,6 +75,13 @@ write   6e400002-...   Write Request
 notify  6e400003-...
 ```
 
+The link must be **bonded**: subscribing to notifications is rejected with
+GATT status 5 (insufficient authentication) on a plain connection — verified
+against a 2017 vehicle. The integration pairs automatically when that
+happens; ESPHome proxies forward the pairing request. The module also
+advertises with no discoverable flags and often needs several connection
+attempts (HCI 0x3E) before one sticks, which the retry logic rides out.
+
 Every message is exactly 20 bytes:
 
 ```

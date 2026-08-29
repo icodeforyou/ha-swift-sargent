@@ -117,8 +117,19 @@ class SargentCoordinator(DataUpdateCoordinator[CanState]):
         try:
             await client.start_notify(NOTIFY_UUID, self._on_notify)
         except BleakError as err:
-            await self._disconnect()
-            raise UpdateFailed(f"Could not subscribe to notifications: {err}") from err
+            # The module demands an encrypted link before it accepts the CCCD
+            # write (GATT status 5, insufficient authentication), so bond and
+            # retry once. ESPHome proxies forward the pairing request.
+            _LOGGER.debug("Subscribe failed (%s); pairing and retrying", err)
+            try:
+                await client.pair()
+                await client.start_notify(NOTIFY_UUID, self._on_notify)
+            except (BleakError, NotImplementedError) as err2:
+                await self._disconnect()
+                raise UpdateFailed(
+                    "Could not subscribe to notifications even after pairing; "
+                    f"press PAIR on the Sargent panel and retry ({err2})"
+                ) from err2
         self._notify_started = True
         _LOGGER.debug("Connected to %s", self.address)
         return client

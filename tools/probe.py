@@ -182,7 +182,14 @@ async def main() -> None:
     probe = Probe()
     async with BleakClient(address) as client:
         probe.client = client
-        await client.start_notify(protocol.NOTIFY_UUID, probe.on_notify)
+        try:
+            await client.start_notify(protocol.NOTIFY_UUID, probe.on_notify)
+        except Exception as err:
+            # The module requires a bonded link before it accepts the CCCD
+            # write (GATT insufficient authentication). Pair and retry.
+            print(f"subscribe failed ({err}); pairing and retrying ...")
+            await client.pair()
+            await client.start_notify(protocol.NOTIFY_UUID, probe.on_notify)
         print("connected; type 'poll' to read status, 'quit' to leave")
 
         loop = asyncio.get_running_loop()
