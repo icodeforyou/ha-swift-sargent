@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SargentConfigEntry, SargentEntity
+from .const import PSU_OLD
 from .coordinator import SargentCoordinator
 from .protocol import (
     CAN_POWER,
@@ -123,7 +124,12 @@ class SargentSwitch(SargentEntity, SwitchEntity):
         return command
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        # CAN 11 writes toggle; sending "on" while on would switch it off.
+        if self.coordinator.psu_generation == PSU_OLD and self.is_on:
+            return
         await self.coordinator.async_send_command(self._command(), 1)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        if self.coordinator.psu_generation == PSU_OLD and not self.is_on:
+            return
         await self.coordinator.async_send_command(self._command(), 0)

@@ -12,7 +12,10 @@ The protocol below was recovered from the official Swift Command 2019 Android
 app and verified against real notification frames from a 2018 Swift Toscana.
 The read path is confirmed byte for byte. **The write path is reconstructed from
 the app's code and has not yet been confirmed against a vehicle.** Treat the
-first switch press as an experiment, not a certainty.
+first switch press as an experiment, not a certainty — a step-by-step plan for
+that first session, including safe exploration of the heating and fridge CAN
+ids, lives in [docs/TESTPLAN.md](docs/TESTPLAN.md). `tools/probe.py` runs the
+same tests straight from a laptop with Bluetooth, no Home Assistant needed.
 
 ## Install
 
@@ -57,6 +60,10 @@ caravans).
   readable; 144, 173–178, 180–182, 185, 186 are writable and cover heating,
   fridge and panel settings).
 - `swift_sargent.start_pairing` — put the control panel into pairing mode.
+
+For protocol exploration, *Download diagnostics* on the device page dumps the
+latest data bytes of every CAN id seen, and debug logging
+(`custom_components.swift_sargent: debug`) records every change frame by frame.
 
 ## The protocol
 

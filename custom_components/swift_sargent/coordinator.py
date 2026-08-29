@@ -149,6 +149,7 @@ class SargentCoordinator(DataUpdateCoordinator[CanState]):
     def _on_notify(self, _handle, payload: bytearray) -> None:
         frame = bytes(payload)
         if is_ack(frame):
+            _LOGGER.debug("Write acknowledged: %s", frame.hex())
             self._ack.set()
             return
         parsed = parse_report(frame)
@@ -158,6 +159,9 @@ class SargentCoordinator(DataUpdateCoordinator[CanState]):
             _LOGGER.debug("Ignoring non-report frame: %s", frame.hex())
             return
         can_id, data = parsed
+        old = self.state.frame(can_id)
+        if old != data:
+            _LOGGER.debug("CAN %d: %s -> %s", can_id, old.hex() if old else None, data.hex())
         self.state.update(can_id, data)
         self._pending_reads.discard(can_id)
         if not self._pending_reads:
