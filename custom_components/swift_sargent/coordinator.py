@@ -238,6 +238,9 @@ class SargentCoordinator(DataUpdateCoordinator[CanState]):
     async def async_send_command(self, command: int, value: int) -> bool:
         """Send a PSU command, using whichever framing this vehicle needs."""
         if self.psu_generation == PSU_OLD:
+            # CAN 11 frames echo status bytes back at the PSU, and the app
+            # always polls right before writing, so do the same.
+            await self.async_refresh()
             frame = build_write_old(command, self.state)
         else:
             frame = build_write_new(command, value)
