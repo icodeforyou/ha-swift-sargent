@@ -1,0 +1,251 @@
+# Ready-made dashboard section for the Swift Command integration.
+#
+# Requires the Mushroom card collection (install "Mushroom" via HACS).
+# Paste into a dashboard: edit view -> Add card -> Manual -> paste -> Save.
+#
+# Entity ids assume the device is named "Swift Command" (the default), which
+# yields ids like switch.swift_command_interior_lights. If yours differ,
+# check Developer tools -> States and adjust.
+#
+# Notes:
+# - The dimmer cards hide the brightness slider because older (CAN 11) PSUs
+#   only support on/off over BLE. On a newer (CAN 8) PSU you can set
+#   show_brightness_control: true.
+# - System power deliberately requires a HOLD to toggle: it cuts the whole
+#   Sargent system including the BLE module itself.
+# - Changes made on the vehicle's own panel show up here only after the
+#   PSU's status image catches up plus one poll: expect 30-90 seconds.
+
+type: vertical-stack
+cards:
+  - type: custom:mushroom-title-card
+    title: 🚐 Sargent
+    subtitle: Swift Command
+
+  # ── Quick toggles ─────────────────────────────────────────────
+  - type: grid
+    columns: 4
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        entity: switch.swift_command_interior_lights
+        primary: Lights
+        icon: mdi:lightbulb-group
+        icon_color: >-
+          {{ 'amber' if is_state('switch.swift_command_interior_lights', 'on') else 'grey' }}
+        fill_container: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: none
+        double_tap_action:
+          action: none
+      - type: custom:mushroom-template-card
+        entity: switch.swift_command_awning_light
+        primary: Awning
+        icon: mdi:awning-outline
+        icon_color: >-
+          {{ 'amber' if is_state('switch.swift_command_awning_light', 'on') else 'grey' }}
+        fill_container: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: none
+        double_tap_action:
+          action: none
+      - type: custom:mushroom-template-card
+        entity: switch.swift_command_entry_light
+        primary: Entry
+        icon: mdi:door-open
+        icon_color: >-
+          {{ 'amber' if is_state('switch.swift_command_entry_light', 'on') else 'grey' }}
+        fill_container: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: none
+        double_tap_action:
+          action: none
+      - type: custom:mushroom-template-card
+        entity: switch.swift_command_water_pump
+        primary: Pump
+        icon: mdi:water-pump
+        icon_color: >-
+          {{ 'blue' if is_state('switch.swift_command_water_pump', 'on') else 'grey' }}
+        fill_container: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: none
+        double_tap_action:
+          action: none
+
+  # ── Dimmers (on/off; older PSUs cannot set levels over BLE) ──
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:mushroom-light-card
+        entity: light.swift_command_dimmer_1
+        name: Dimmer 1
+        icon: mdi:lightbulb-on-50
+        show_brightness_control: false
+        fill_container: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
+      - type: custom:mushroom-light-card
+        entity: light.swift_command_dimmer_2
+        name: Dimmer 2
+        icon: mdi:lightbulb-on-50
+        show_brightness_control: false
+        fill_container: true
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
+
+  # ── Power ─────────────────────────────────────────────────────
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        entity: sensor.swift_command_leisure_battery_voltage
+        primary: >-
+          {% set s = states('sensor.swift_command_leisure_battery_voltage') %}
+          {% if s in ['unknown', 'unavailable'] %}–{% else %}{{ s }} V{% endif %}
+        secondary: Leisure battery
+        icon: mdi:battery
+        icon_color: >-
+          {% set v = states('sensor.swift_command_leisure_battery_voltage') | float(-1) %}
+          {% if v < 0 %}grey
+          {% elif is_state('binary_sensor.swift_command_battery_charging', 'on') %}teal
+          {% elif v >= 12.6 %}green
+          {% elif v >= 12.0 %}orange
+          {% else %}red{% endif %}
+        fill_container: true
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: sensor.swift_command_vehicle_battery_voltage
+        primary: >-
+          {% set s = states('sensor.swift_command_vehicle_battery_voltage') %}
+          {% if s in ['unknown', 'unavailable'] %}–{% else %}{{ s }} V{% endif %}
+        secondary: Vehicle battery
+        icon: mdi:car-battery
+        icon_color: >-
+          {% set v = states('sensor.swift_command_vehicle_battery_voltage') | float(-1) %}
+          {% if v < 0 %}grey {% elif v >= 12.4 %}green
+          {% elif v >= 11.9 %}orange {% else %}red{% endif %}
+        fill_container: true
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.swift_command_mains_connected
+        primary: >-
+          {% if is_state('binary_sensor.swift_command_mains_connected', 'on') %}
+          {{ states('sensor.swift_command_mains_current') | float(0) }} A
+          {% else %}Off-grid{% endif %}
+        secondary: Mains
+        icon: >-
+          {{ 'mdi:power-plug' if is_state('binary_sensor.swift_command_mains_connected', 'on')
+          else 'mdi:power-plug-off' }}
+        icon_color: >-
+          {{ 'green' if is_state('binary_sensor.swift_command_mains_connected', 'on') else 'grey' }}
+        fill_container: true
+        tap_action:
+          action: more-info
+
+  # ── Water ─────────────────────────────────────────────────────
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        entity: sensor.swift_command_fresh_water_level
+        primary: >-
+          {% set s = states('sensor.swift_command_fresh_water_level') %}
+          {% if s in ['unknown', 'unavailable'] %}–{% else %}{{ s }} %{% endif %}
+        secondary: Fresh water
+        icon: mdi:water
+        icon_color: >-
+          {% set v = states('sensor.swift_command_fresh_water_level') | float(-1) %}
+          {% if v < 0 %}grey {% elif v >= 60 %}blue
+          {% elif v >= 30 %}orange {% else %}red{% endif %}
+        fill_container: true
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: sensor.swift_command_waste_water_level
+        primary: >-
+          {% set s = states('sensor.swift_command_waste_water_level') %}
+          {% if s in ['unknown', 'unavailable'] %}–{% else %}{{ s }} %{% endif %}
+        secondary: Waste water
+        icon: mdi:water-off
+        icon_color: >-
+          {% set v = states('sensor.swift_command_waste_water_level') | float(-1) %}
+          {% if v < 0 %}grey {% elif v >= 80 %}red
+          {% elif v >= 50 %}orange {% else %}green{% endif %}
+        fill_container: true
+        tap_action:
+          action: more-info
+
+  # ── Climate ───────────────────────────────────────────────────
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        entity: sensor.swift_command_inside_temperature
+        primary: >-
+          {% set s = states('sensor.swift_command_inside_temperature') %}
+          {% if s in ['unknown', 'unavailable'] %}–{% else %}{{ s }} °C{% endif %}
+        secondary: Inside
+        icon: mdi:home-thermometer
+        icon_color: orange
+        fill_container: true
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: sensor.swift_command_outside_temperature
+        primary: >-
+          {% set s = states('sensor.swift_command_outside_temperature') %}
+          {% if s in ['unknown', 'unavailable'] %}–{% else %}{{ s }} °C{% endif %}
+        secondary: Outside
+        icon: mdi:thermometer
+        icon_color: cyan
+        fill_container: true
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: sensor.swift_command_humidity
+        primary: >-
+          {% set s = states('sensor.swift_command_humidity') %}
+          {% if s in ['unknown', 'unavailable'] %}–{% else %}{{ s }} %{% endif %}
+        secondary: Humidity
+        icon: mdi:water-percent
+        icon_color: blue
+        fill_container: true
+        tap_action:
+          action: more-info
+
+  # ── System power (hold to toggle — it cuts the BLE module too) ──
+  - type: custom:mushroom-template-card
+    entity: switch.swift_command_system_power
+    primary: System power
+    secondary: >-
+      {{ 'ON — hold to switch off' if
+      is_state('switch.swift_command_system_power', 'on') else
+      'OFF — hold to switch on' }}
+    icon: mdi:power
+    icon_color: >-
+      {{ 'green' if is_state('switch.swift_command_system_power', 'on') else 'red' }}
+    fill_container: true
+    tap_action:
+      action: more-info
+    hold_action:
+      action: toggle
+    double_tap_action:
+      action: none

@@ -54,6 +54,14 @@ caravans).
 | Leisure/vehicle battery voltage, battery/solar/mains current, humidity, inside/outside temperature, fresh/waste water level | sensors |
 | Mains connected, engine running, battery charging, solar active | binary sensors |
 
+## Dashboard
+
+A ready-made dashboard section — quick toggles, dimmers, battery, water and
+climate tiles — lives in [docs/dashboard.yaml](docs/dashboard.yaml). It uses
+the [Mushroom](https://github.com/piitaya/lovelace-mushroom) cards (install
+via HACS), and pastes straight into any dashboard: edit view → Add card →
+Manual.
+
 ## Services
 
 - `swift_sargent.send_command` — send any PsuCommands value with an argument.
