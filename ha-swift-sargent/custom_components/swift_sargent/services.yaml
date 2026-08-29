@@ -1,0 +1,60 @@
+send_raw:
+  name: Send raw frame
+  description: >-
+    Send an arbitrary 20 byte frame to the Sargent write characteristic.
+    Intended for protocol exploration. Frames are [kind][0][can id lo][can id hi]
+    followed by eight data bytes and eight padding bytes.
+  fields:
+    frame:
+      name: Frame
+      description: 20 bytes as hex, spaces allowed.
+      required: true
+      example: "0200320000000000000000000000000000000000"
+      selector:
+        text:
+    entry_id:
+      name: Config entry
+      description: Which vehicle, if you have more than one.
+      selector:
+        text:
+
+send_command:
+  name: Send PSU command
+  description: >-
+    Send a PsuCommands value with an on/off or level argument. 3 = water pump,
+    4 = system power, 5 = interior lights, 6 = awning light, 8 = entry light,
+    9/10 = dimmer 1/2 power, 50/51 = dimmer 1/2 level, 12 = tank fill.
+  fields:
+    command:
+      name: Command
+      required: true
+      example: 5
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    value:
+      name: Value
+      description: 0 or 1 for switches, 0-100 for dimmer levels.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    entry_id:
+      name: Config entry
+      selector:
+        text:
+
+start_pairing:
+  name: Start Bluetooth pairing
+  description: >-
+    Ask the control panel to enter Bluetooth pairing mode, the same as pressing
+    PAIR on the panel.
+  fields:
+    entry_id:
+      name: Config entry
+      selector:
+        text:

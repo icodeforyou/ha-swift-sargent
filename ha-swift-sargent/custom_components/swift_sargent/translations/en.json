@@ -1,0 +1,41 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Swift Command",
+        "description": "Pick the Sargent Bluetooth module. It must be in range of a Bluetooth adapter or an ESPHome Bluetooth proxy, and the control panel must be switched on.",
+        "data": {
+          "address": "Device"
+        }
+      },
+      "settings": {
+        "title": "Vehicle settings",
+        "description": "If switches do nothing on the first try, change the PSU generation and try again.",
+        "data": {
+          "psu_generation": "PSU generation",
+          "vehicle_type": "Vehicle type",
+          "scan_interval": "Poll interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "no_devices_found": "No SWIFT_BLE device found. Enter the MAC address manually."
+    },
+    "abort": {
+      "already_configured": "This vehicle is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Vehicle settings",
+        "data": {
+          "psu_generation": "PSU generation",
+          "vehicle_type": "Vehicle type",
+          "scan_interval": "Poll interval (seconds)"
+        }
+      }
+    }
+  }
+}

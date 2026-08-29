@@ -1,0 +1,41 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Swift Command",
+        "description": "Välj Sargents Bluetooth-modul. Den måste vara inom räckhåll för en Bluetooth-adapter eller en ESPHome Bluetooth-proxy, och kontrollpanelen måste vara påslagen.",
+        "data": {
+          "address": "Enhet"
+        }
+      },
+      "settings": {
+        "title": "Fordonsinställningar",
+        "description": "Om strömbrytarna inte gör något på första försöket, byt PSU-generation och prova igen.",
+        "data": {
+          "psu_generation": "PSU-generation",
+          "vehicle_type": "Fordonstyp",
+          "scan_interval": "Uppdateringsintervall (sekunder)"
+        }
+      }
+    },
+    "error": {
+      "no_devices_found": "Ingen SWIFT_BLE-enhet hittades. Ange MAC-adressen manuellt."
+    },
+    "abort": {
+      "already_configured": "Fordonet är redan konfigurerat."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fordonsinställningar",
+        "data": {
+          "psu_generation": "PSU-generation",
+          "vehicle_type": "Fordonstyp",
+          "scan_interval": "Uppdateringsintervall (sekunder)"
+        }
+      }
+    }
+  }
+}
