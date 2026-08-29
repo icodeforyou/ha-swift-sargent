@@ -23,6 +23,8 @@ DEFAULT_VEHICLE_TYPE: Final = VEHICLE_MOTORHOME
 
 LOCAL_NAME: Final = "SWIFT_BLE"
 
+# How long to wait for the pairing exchange; the panel may need PAIR pressed.
+PAIR_TIMEOUT: Final = 15.0
 # How long to wait for a write acknowledgement before giving up.
 ACK_TIMEOUT: Final = 4.0
 # How long to wait for the reports triggered by a poll cycle.

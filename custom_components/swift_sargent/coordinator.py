@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     INTER_FRAME_DELAY,
+    PAIR_TIMEOUT,
     PSU_OLD,
     READ_TIMEOUT,
     VEHICLE_CARAVAN,
@@ -115,21 +116,24 @@ class SargentCoordinator(DataUpdateCoordinator[CanState]):
 
         self._client = client
         try:
-            await client.start_notify(NOTIFY_UUID, self._on_notify)
-        except BleakError as err:
             # The module demands an encrypted link before it accepts the CCCD
-            # write (GATT status 5, insufficient authentication), so bond and
-            # retry once. ESPHome proxies forward the pairing request.
-            _LOGGER.debug("Subscribe failed (%s); pairing and retrying", err)
+            # write (GATT status 5, insufficient authentication), so encrypt
+            # up front: pair() reuses the stored bond when there is one and
+            # runs the SMP exchange when there is not, in which case the
+            # Sargent panel must be in pairing mode. Bounded, because an
+            # unanswered pairing request otherwise hangs until the link dies.
             try:
-                await client.pair()
-                await client.start_notify(NOTIFY_UUID, self._on_notify)
-            except (BleakError, NotImplementedError) as err2:
-                await self._disconnect()
-                raise UpdateFailed(
-                    "Could not subscribe to notifications even after pairing; "
-                    f"press PAIR on the Sargent panel and retry ({err2})"
-                ) from err2
+                async with asyncio.timeout(PAIR_TIMEOUT):
+                    await client.pair()
+            except NotImplementedError:
+                _LOGGER.debug("Backend cannot pair; subscribing anyway")
+            await client.start_notify(NOTIFY_UUID, self._on_notify)
+        except (BleakError, asyncio.TimeoutError) as err:
+            await self._disconnect()
+            raise UpdateFailed(
+                "Could not pair and subscribe. Press PAIR on the Sargent "
+                f"panel, then reload the integration: {err}"
+            ) from err
         self._notify_started = True
         _LOGGER.debug("Connected to %s", self.address)
         return client
