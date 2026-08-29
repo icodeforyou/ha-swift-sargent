@@ -33,6 +33,8 @@ READ_TIMEOUT: Final = 3.0
 INTER_FRAME_DELAY: Final = 0.15
 # How long the PSU needs to act on a command before its status reflects it.
 COMMAND_SETTLE: Final = 1.0
+# How long an optimistic state override outlives the PSU's lazy status image.
+OPTIMISTIC_TTL: Final = 120.0
 
 SERVICE_SEND_RAW: Final = "send_raw"
 SERVICE_SEND_COMMAND: Final = "send_command"

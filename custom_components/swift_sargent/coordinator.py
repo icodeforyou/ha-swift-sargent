@@ -25,6 +25,7 @@ from .const import (
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     INTER_FRAME_DELAY,
+    OPTIMISTIC_TTL,
     PAIR_TIMEOUT,
     PSU_OLD,
     READ_TIMEOUT,
@@ -265,20 +266,14 @@ class SargentCoordinator(DataUpdateCoordinator[CanState]):
         if bool(self.state.byte(can_id, byte_index)) == desired:
             return True
         acked = await self.async_send_raw(build_write_old(command, self.state))
-        # The PSU updates its status image lazily; re-poll a few times so a
-        # slow update is not mistaken for a failed toggle.
-        for attempt in range(1, 5):
-            await asyncio.sleep(COMMAND_SETTLE)
-            await self.async_refresh()
-            if bool(self.state.byte(can_id, byte_index)) == desired:
-                _LOGGER.debug(
-                    "Toggle command %d landed after %d poll(s)", command, attempt
-                )
-                return acked
-        _LOGGER.warning(
-            "Toggle command %d did not land: CAN %d byte %d still %d",
-            command, can_id, byte_index, self.state.byte(can_id, byte_index),
-        )
+        # The status image the PSU serves to reads lags the actual outputs by
+        # up to a minute, so report the commanded state optimistically until
+        # a poll confirms it (or the override times out and the reported
+        # value wins again).
+        self.state.expect(can_id, byte_index, 1 if desired else 0, OPTIMISTIC_TTL)
+        self.async_set_updated_data(self.state)
+        await asyncio.sleep(COMMAND_SETTLE)
+        await self.async_request_refresh()
         return acked
 
     def tank_fill_command(self) -> int:

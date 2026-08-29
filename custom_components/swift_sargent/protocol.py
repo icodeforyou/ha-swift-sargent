@@ -24,6 +24,7 @@ Every message is exactly 20 bytes:
 
 from __future__ import annotations
 
+import time
 from typing import Final
 
 SERVICE_UUID: Final = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
@@ -155,18 +156,38 @@ def decode_temperature(low: int, high: int) -> float | None:
 
 
 class CanState:
-    """The most recent data bytes seen for each CAN id."""
+    """The most recent data bytes seen for each CAN id.
+
+    The PSU updates the status image it serves to BLE reads lazily - a
+    toggled circuit can take the better part of a minute to show up - so a
+    byte can carry an optimistic override (see expect()) that wins over the
+    reported value until the PSU confirms it or the override expires.
+    """
 
     def __init__(self) -> None:
         self._frames: dict[int, bytes] = {}
+        self._expected: dict[tuple[int, int], tuple[int, float]] = {}
 
     def update(self, can_id: int, data: bytes) -> None:
         self._frames[can_id] = data
+        for (cid, index), (value, _until) in list(self._expected.items()):
+            if cid == can_id and index < len(data) and bool(data[index]) == bool(value):
+                del self._expected[(cid, index)]
+
+    def expect(self, can_id: int, index: int, value: int, ttl: float) -> None:
+        """Optimistically report `value` for one byte for up to `ttl` seconds."""
+        self._expected[(can_id, index)] = (value, time.monotonic() + ttl)
 
     def frame(self, can_id: int) -> bytes | None:
         return self._frames.get(can_id)
 
     def byte(self, can_id: int, index: int) -> int:
+        pending = self._expected.get((can_id, index))
+        if pending is not None:
+            value, until = pending
+            if time.monotonic() < until:
+                return value
+            del self._expected[(can_id, index)]
         data = self._frames.get(can_id)
         if data is None or index >= len(data):
             return 0

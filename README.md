@@ -110,6 +110,11 @@ A write is acknowledged by a frame with `0x43` at byte 2 and `0x45` at byte 4.
 
 Reading has no side effects. `0200320000...` polls CAN 50.
 
+The status image served to reads lags the actual outputs by up to a minute
+(observed on a 2017 vehicle): a toggled circuit responds immediately but
+CAN 50/51 keep reporting the old state for a while. The integration bridges
+the gap with optimistic per-byte overrides.
+
 ### Write, newer PSU
 
 ```
