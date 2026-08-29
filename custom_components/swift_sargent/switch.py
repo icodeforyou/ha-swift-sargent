@@ -123,13 +123,21 @@ class SargentSwitch(SargentEntity, SwitchEntity):
             return command(self.coordinator)
         return command
 
+    async def _set_state(self, desired: bool) -> None:
+        desc = self.entity_description
+        if self.coordinator.psu_generation == PSU_OLD:
+            # CAN 11 writes toggle, so let the coordinator poll fresh state
+            # and decide whether a toggle is needed at all.
+            await self.coordinator.async_toggle_to(
+                self._command(), desc.can_id, desc.byte_index, desired
+            )
+        else:
+            await self.coordinator.async_send_command(
+                self._command(), 1 if desired else 0
+            )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
-        # CAN 11 writes toggle; sending "on" while on would switch it off.
-        if self.coordinator.psu_generation == PSU_OLD and self.is_on:
-            return
-        await self.coordinator.async_send_command(self._command(), 1)
+        await self._set_state(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        if self.coordinator.psu_generation == PSU_OLD and not self.is_on:
-            return
-        await self.coordinator.async_send_command(self._command(), 0)
+        await self._set_state(False)

@@ -31,6 +31,8 @@ ACK_TIMEOUT: Final = 4.0
 READ_TIMEOUT: Final = 3.0
 # Delay between consecutive frames so the PSU keeps up.
 INTER_FRAME_DELAY: Final = 0.15
+# How long the PSU needs to act on a command before its status reflects it.
+COMMAND_SETTLE: Final = 1.0
 
 SERVICE_SEND_RAW: Final = "send_raw"
 SERVICE_SEND_COMMAND: Final = "send_command"

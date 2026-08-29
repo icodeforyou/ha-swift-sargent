@@ -10,12 +10,14 @@ while the ESP32 lives in the vehicle.
 
 The protocol below was recovered from the official Swift Command 2019 Android
 app and verified against real notification frames from a 2018 Swift Toscana.
-The read path is confirmed byte for byte. **The write path is reconstructed from
-the app's code and has not yet been confirmed against a vehicle.** Treat the
-first switch press as an experiment, not a certainty — a step-by-step plan for
-that first session, including safe exploration of the heating and fridge CAN
-ids, lives in [docs/TESTPLAN.md](docs/TESTPLAN.md). `tools/probe.py` runs the
-same tests straight from a laptop with Bluetooth, no Home Assistant needed.
+The read path is confirmed byte for byte. The write path is now confirmed on a
+2017 motorhome: **the older CAN 11 toggle framing works** (interior lights
+respond), while the newer CAN 8 framing was ignored there — no acknowledgement
+and a dropped link — so pick the PSU generation to match your vehicle. The
+CAN 8 path is still unconfirmed against real hardware. A step-by-step plan for
+a first session, including safe exploration of the heating and fridge CAN ids,
+lives in [docs/TESTPLAN.md](docs/TESTPLAN.md). `tools/probe.py` runs the same
+tests straight from a laptop with Bluetooth, no Home Assistant needed.
 
 ## Install
 

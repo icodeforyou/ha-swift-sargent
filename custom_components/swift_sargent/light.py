@@ -95,6 +95,17 @@ class SargentDimmer(SargentEntity, LightEntity):
         level = state.byte(CAN_LIGHTING, self.entity_description.level_byte)
         return min(255, round(level * 255 / 100))
 
+    async def _set_power(self, desired: bool) -> None:
+        desc = self.entity_description
+        if self.coordinator.psu_generation == PSU_OLD:
+            await self.coordinator.async_toggle_to(
+                desc.power_command, CAN_LIGHTING, desc.status_byte, desired
+            )
+        else:
+            await self.coordinator.async_send_command(
+                desc.power_command, 1 if desired else 0
+            )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None and self.coordinator.psu_generation != PSU_OLD:
@@ -102,13 +113,7 @@ class SargentDimmer(SargentEntity, LightEntity):
             await self.coordinator.async_send_command(
                 self.entity_description.level_command, level
             )
-        if not self.is_on:
-            await self.coordinator.async_send_command(
-                self.entity_description.power_command, 1
-            )
+        await self._set_power(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        if self.is_on or self.coordinator.psu_generation != PSU_OLD:
-            await self.coordinator.async_send_command(
-                self.entity_description.power_command, 0
-            )
+        await self._set_power(False)

@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ACK_TIMEOUT,
+    COMMAND_SETTLE,
     CONF_PSU_GENERATION,
     CONF_SCAN_INTERVAL,
     CONF_VEHICLE_TYPE,
@@ -245,8 +246,32 @@ class SargentCoordinator(DataUpdateCoordinator[CanState]):
         else:
             frame = build_write_new(command, value)
         acked = await self.async_send_raw(frame)
-        await asyncio.sleep(INTER_FRAME_DELAY)
-        await self.async_request_refresh()
+        # Give the PSU a moment to act before reading the state back;
+        # a debounced request_refresh here left entities showing stale state.
+        await asyncio.sleep(COMMAND_SETTLE)
+        await self.async_refresh()
+        return acked
+
+    async def async_toggle_to(
+        self, command: int, can_id: int, byte_index: int, desired: bool
+    ) -> bool:
+        """Drive a toggle-semantics circuit (old PSU) to a desired state.
+
+        Polls first so the decision is made on fresh data instead of state
+        that may be half a minute old, sends the toggle only when the actual
+        state differs from the desired one, then reads the result back.
+        """
+        await self.async_refresh()
+        if bool(self.state.byte(can_id, byte_index)) == desired:
+            return True
+        acked = await self.async_send_raw(build_write_old(command, self.state))
+        await asyncio.sleep(COMMAND_SETTLE)
+        await self.async_refresh()
+        if bool(self.state.byte(can_id, byte_index)) != desired:
+            _LOGGER.warning(
+                "Toggle command %d did not land: CAN %d byte %d still %d",
+                command, can_id, byte_index, self.state.byte(can_id, byte_index),
+            )
         return acked
 
     def tank_fill_command(self) -> int:
