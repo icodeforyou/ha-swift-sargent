@@ -17,6 +17,7 @@ from .protocol import (
     CAN_POWER,
     CAN_STATUS,
     CMD_AWNING_LIGHT,
+    CMD_BATTERY_SELECT,
     CMD_ENTRY_LIGHT,
     CMD_LIGHTS,
     CMD_POWER,
@@ -35,6 +36,14 @@ class SargentSwitchDescription(SwitchEntityDescription):
 
 
 SWITCHES: tuple[SargentSwitchDescription, ...] = (
+    SargentSwitchDescription(
+        key="vehicle_battery_selected",
+        name="Vehicle battery selected",
+        icon="mdi:car-battery",
+        can_id=CAN_STATUS,
+        byte_index=1,
+        command=CMD_BATTERY_SELECT,
+    ),
     SargentSwitchDescription(
         key="interior_lights",
         name="Interior lights",

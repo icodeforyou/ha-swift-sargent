@@ -49,7 +49,7 @@ caravans).
 
 | Entity | Source |
 |---|---|
-| Interior lights, awning light, entry light, water pump, system power, tank fill | switches |
+| Vehicle battery selected, interior lights, awning light, entry light, water pump, system power, tank fill | switches |
 | Dimmer 1, Dimmer 2 (with brightness) | lights |
 | Leisure/vehicle battery voltage, battery/solar/mains current, humidity, inside/outside temperature, fresh/waste water level | sensors |
 | Mains connected, engine running, battery charging, solar active | binary sensors |
